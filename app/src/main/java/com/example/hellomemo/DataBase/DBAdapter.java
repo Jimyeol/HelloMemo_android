@@ -2,6 +2,7 @@ package com.example.hellomemo.DataBase;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -95,4 +96,29 @@ public class DBAdapter {
 
         return mDb.insert(DATABASE_TABLE, null, initialValues);
     }
+
+    //한 노트만 보여주기
+    public Cursor fetchNote(long rowId) throws SQLException {
+        Cursor mCursor =
+                mDb.query(true, DATABASE_TABLE, new String[] {KEY_ROWID,
+                                TITLE, BODY,CHANGED_DATE, CHANGED_DATE_VALUE
+                                ,CREATE_DATE}, KEY_ROWID + "=" + rowId, null,
+                        null, null, null, null);
+        if (mCursor != null) {
+            mCursor.moveToFirst();
+        }
+        return mCursor;
+    }
+
+    //모든 노트 보여주기
+    public Cursor fetchAllNotes(String key, String str) {
+        //첫번째 인자값은 어떤것을 정렬할것인가
+        //두번째 인자값은 내림차순인가 오름차순인가
+        //내림차순인데 KEY_TIME값이 제일 최근이 위로감
+        return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, TITLE,
+                        BODY, CHANGED_DATE, CHANGED_DATE_VALUE, CREATE_DATE}, null, null, null,
+                null, key + " " + str, null);    //ASC
+        // Order by (내림차순 정렬기능)
+    }
+
 }

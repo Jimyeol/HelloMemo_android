@@ -3,10 +3,12 @@ package com.example.hellomemo;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
+import com.example.hellomemo.DataBase.DBAdapter;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -18,6 +20,8 @@ import android.provider.Settings;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,6 +31,13 @@ public class MainActivity extends AppCompatActivity {
     //옵션 코드
     private static final int ACTIVITY_CREATE=0;
 
+    //데이터 베이스 어답터
+    static public DBAdapter mDbHelper;
+
+    //리스트뷰 생성, 어댑터
+    private ListView listview ;
+    private MyAdapter adapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,6 +45,16 @@ public class MainActivity extends AppCompatActivity {
 
         //안드로이드 6.0이상에서 권한 획득 요청청
         if( Build.VERSION.SDK_INT>=23) someMethod();
+
+        //DB오픈
+        mDbHelper = new DBAdapter (this);
+        mDbHelper.open();
+
+        //리스트뷰, 어댑터
+        adapter = new MyAdapter() ;
+        listview = (ListView) findViewById(R.id.Notelist);
+        //setOptionSort(getOptionSort()); //정렬 저장되어있는거 불러오기
+        fillData(1);
 
 
         /* 메모 추가 */
@@ -91,5 +112,23 @@ public class MainActivity extends AppCompatActivity {
         //노트 생성 인텐트
         Intent i = new Intent(this, MemoAddActivity.class);
         startActivityForResult(i, ACTIVITY_CREATE);
+    }
+
+    /*
+    * 모든 노트 보여주기
+    * */
+    private void fillData(int n) {
+        Cursor notesCursor =  mDbHelper.fetchAllNotes(mDbHelper.CHANGED_DATE_VALUE, "");
+        // Get all of the notes from the database and create the item list
+        startManagingCursor(notesCursor);
+
+
+        String[] from = new String[] { DBAdapter.TITLE , DBAdapter.BODY, DBAdapter.CHANGED_DATE};
+        int[] to = new int[] { R.id.textView1,R.id.textbody,R.id.date_row};
+
+        // Now create an array adapter and set it to display using our row
+        SimpleCursorAdapter notes =
+                new SimpleCursorAdapter(this, R.layout.note_row, notesCursor, from, to);
+        listview.setAdapter(notes);
     }
 }
