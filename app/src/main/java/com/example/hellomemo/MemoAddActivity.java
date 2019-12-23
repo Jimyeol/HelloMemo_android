@@ -27,6 +27,7 @@ public class MemoAddActivity extends Activity {
     public static String strDateCreateValueView = "";         //생성된 Date
     public static long longDateChangeValueView = 0;
 
+    //Index
     private Long mRowId;
 
     private Cursor note;
@@ -65,14 +66,20 @@ public class MemoAddActivity extends Activity {
         if (mRowId == null) {
             Bundle extras = getIntent().getExtras();
 
+            mRowId = extras != null ? extras.getLong(DBAdapter.KEY_ROWID)
+                    : null;
+
             //메모 새로만들기
             if( mRowId == null) {
-                //nMode = MODE_EDIT;
+                //nMode = MEMOMODE.MODE_EDIT;
                 setNewDate();   //현재 날짜 불러오기
                 mBodyText.requestFocus();   //새로운 메모라면 바로 포커스가 몸체 메모로 잡힌다.
 
                 //생성된날짜 저장
                 strDateCreateValueView = getDateFormat("y'년'M'월'd'일' H':'m");
+            } else {
+                //기존의 메모를 수정하는거기 때문에 날짜 불러오기
+                loadSavedDate();
             }
         }
         populateFields();
@@ -86,7 +93,9 @@ public class MemoAddActivity extends Activity {
         });
     }
 
-    /* 에디트박스 */
+    /*********************************************
+     * 에디트 박스
+     ********************************************** */
     public static class LineEditText extends AppCompatEditText {
         // we need this constructor for LayoutInflater
         public LineEditText(Context context, AttributeSet attrs) {
@@ -95,6 +104,9 @@ public class MemoAddActivity extends Activity {
     }
 
 
+    /*********************************************
+     * 에디트박스 메모 채우기 (메모 클릭시 내용 불러오기)
+     ********************************************** */
     private void populateFields() {
         if (mRowId != null) {
             note = mDbHelper.fetchNote(mRowId);
@@ -118,9 +130,9 @@ public class MemoAddActivity extends Activity {
         }
     }
 
-   /*
-   * 메모 생성시 현재 날짜 받아오기
-   * */
+    /*********************************************
+     * 현재 시간, 날짜 불러오기
+     ********************************************** */
     private void setNewDate() {
         strDateChangeValue = getDateFormat("yyMMddHHmm");    //Long을 저장하기 위해 불러오기
         strDateChangeValueView = getDateFormat("y'.'M'.'d a h':'m");    //뷰에 보여주기 위한
@@ -131,9 +143,12 @@ public class MemoAddActivity extends Activity {
         mDateText.setText(""+strDateChangeValueView);
     }
 
+
+    /*********************************************
+     * 현재 시간, 날짜 불러오기
+     ********************************************** */
     private String getDateFormat(String str) {
         String Date;
-
         long msTime = System.currentTimeMillis();
         java.util.Date curDateTime = new Date(msTime);
 
@@ -143,6 +158,9 @@ public class MemoAddActivity extends Activity {
         return Date;
     }
 
+    /*********************************************
+     * 저장하기 (DB에 저장)
+     ********************************************** */
     private void saveState() {
         String title = mTitleText.getText().toString();
         String body = mBodyText.getText().toString();
@@ -190,5 +208,42 @@ public class MemoAddActivity extends Activity {
 //            Toast.makeText(getApplicationContext(),
 //                    R.string.memo_save, Toast.LENGTH_SHORT).show();
 //        }
+    }
+
+    /*********************************************
+     * 기존 메모 불러올시, 저장된 날짜 Load
+     ********************************************** */
+    private void loadSavedDate() {
+        if (mRowId != null) {
+            note = mDbHelper.fetchNote(mRowId);
+
+            strDateChangeValueView = note.getString(
+                    note.getColumnIndexOrThrow(DBAdapter.CHANGED_DATE));
+
+            //정렬을 위한 날짜를 long으로 변형합니다. (스트링은 정렬이어려우니까)
+            longDateChangeValueView = note.getLong(
+                    note.getColumnIndexOrThrow(DBAdapter.CHANGED_DATE_VALUE));
+
+            mDateText.setText("" + strDateChangeValueView);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        saveState();
+        outState.putSerializable(DBAdapter.KEY_ROWID, mRowId);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        saveState();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        populateFields();
     }
 }
