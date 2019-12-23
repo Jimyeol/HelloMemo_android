@@ -9,15 +9,16 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 public class DBAdapter {
-    /* Attribute */
-    /*
+
+    /*********************************************
+     ------- Attribute
     * KEY_ROWID - Index
     * TITLE - 제목
     * BODY - 내용
     * CHANGED_DATE - 수정된 보여주기 날짜 ex)2016. 9. 5 7:56
     * CHANGED_DATE_VALUE - 수정된 정렬용 날짜 ex)201695756 (정렬용)
     * CREATE_DATE - 생성된 날짜  ex)2016. 9. 5 7:56
-    * */
+    * ********************************************** */
     public static final String KEY_ROWID = "_id";
     public static final String TITLE = "title";
     public static final String CHANGED_DATE = "date_changed";
@@ -38,7 +39,9 @@ public class DBAdapter {
     public static final String ASC = "ASC";         //오름차순
     public static final String DESC = "DESC";       //내림차순
 
-    //디비 생성 Create
+    /*********************************************
+     * DB 생성 Query
+     ********************************************** */
     private static final String DATABASE_CREATE =
             "create table " + DATABASE_TABLE + "("
                     + KEY_ROWID + " integer primary key autoincrement, "
@@ -84,9 +87,10 @@ public class DBAdapter {
         mDbHelper.close();
     }
 
-    //Title = 노트 제목
-    //Body = 노트 몸체
-    public long createNote(String title, String body, String date, Long time, String date_create) {
+    /*********************************************
+     * 메모 생성
+     ********************************************** */
+    public long createMemo(String title, String body, String date, Long time, String date_create) {
         ContentValues initialValues = new ContentValues();
         initialValues.put(TITLE, title);
         initialValues.put(BODY, body);
@@ -97,8 +101,10 @@ public class DBAdapter {
         return mDb.insert(DATABASE_TABLE, null, initialValues);
     }
 
-    //한 노트만 보여주기
-    public Cursor fetchNote(long rowId) throws SQLException {
+    /*********************************************
+     * 특정 메모만 보여주기
+     ********************************************** */
+    public Cursor fetchMemo(long rowId) throws SQLException {
         Cursor mCursor =
                 mDb.query(true, DATABASE_TABLE, new String[] {KEY_ROWID,
                                 TITLE, BODY,CHANGED_DATE, CHANGED_DATE_VALUE
@@ -110,8 +116,10 @@ public class DBAdapter {
         return mCursor;
     }
 
-    //모든 노트 보여주기
-    public Cursor fetchAllNotes(String key, String str) {
+    /*********************************************
+     * 모든 메모 보여주기
+     ********************************************** */
+    public Cursor fetchAllMemos(String key, String str) {
         //첫번째 인자값은 어떤것을 정렬할것인가
         //두번째 인자값은 내림차순인가 오름차순인가
         //내림차순인데 KEY_TIME값이 제일 최근이 위로감
@@ -119,6 +127,20 @@ public class DBAdapter {
                         BODY, CHANGED_DATE, CHANGED_DATE_VALUE, CREATE_DATE}, null, null, null,
                 null, key + " " + str, null);    //ASC
         // Order by (내림차순 정렬기능)
+    }
+
+    /*********************************************
+     * 메모 수정
+     ********************************************** */
+    public boolean updateMemo(long rowId, String title, String body,String date,
+                              Long time, String date_create) {
+        ContentValues args = new ContentValues();
+        args.put(TITLE, title);
+        args.put(BODY, body);
+        args.put(CHANGED_DATE, date);
+        args.put(CHANGED_DATE_VALUE, time);
+        args.put(CREATE_DATE, date_create);
+        return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
     }
 
 }

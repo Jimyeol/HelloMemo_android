@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
     * 모든 메모 보여주기 (List)
     ********************************************** */
     private void showAllMemos(int n) {
-        Cursor notesCursor =  mDbHelper.fetchAllNotes(mDbHelper.CHANGED_DATE_VALUE, "");
+        Cursor notesCursor =  mDbHelper.fetchAllMemos(mDbHelper.CHANGED_DATE_VALUE, "");
         startManagingCursor(notesCursor);
 
         String[] from = new String[] { DBAdapter.TITLE , DBAdapter.BODY, DBAdapter.CHANGED_DATE};

@@ -7,10 +7,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatEditText;
@@ -30,6 +33,9 @@ public class MemoAddActivity extends Activity {
     //Index
     private Long mRowId;
 
+    //MODE
+    private byte nMode = MEMOMODE.MODE_VIEW;
+
     private Cursor note;
 
     private EditText mTitleText;
@@ -48,21 +54,21 @@ public class MemoAddActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_addmemo);
 
-        //DB오픈
+        /**** DB 오픈 ****/
         mDbHelper = new DBAdapter(this);
         mDbHelper.open();
 
-        //레이아웃들 초기화
+        /**** 레이아웃 초기화 ****/
         mTitleText = (EditText) findViewById(R.id.title);
         mBodyText = (EditText) findViewById(R.id.body);
         mDateText = (TextView) findViewById(R.id.notelist_date);
         btnSave = (ImageButton) findViewById(R.id.btn_Memo_Save);
 
-        //Index 불러오기
+        /**** Index 불러오기 ****/
         mRowId = (savedInstanceState == null) ? null :
                 (Long) savedInstanceState.getSerializable(DBAdapter.KEY_ROWID);
 
-        //Index가 비어있을시 메모 생성
+        /**** Index 비어있을시 메모 생성 ****/
         if (mRowId == null) {
             Bundle extras = getIntent().getExtras();
 
@@ -84,6 +90,16 @@ public class MemoAddActivity extends Activity {
         }
         populateFields();
 
+        /**** 더블 클릭시 메모 수정 ****/
+        mBodyText.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+
+                return gestureDetector.onTouchEvent(motionEvent);
+            }
+        });
+
+        /**** 메모 저장 ****/
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -92,6 +108,28 @@ public class MemoAddActivity extends Activity {
             }
         });
     }
+
+    /*********************************************
+     * 제스쳐 이벤트
+     ********************************************** */
+    final GestureDetector gestureDetector = new GestureDetector(
+            new GestureDetector.SimpleOnGestureListener() {
+                //더블탭 눌렸을때 제스쳐 처리
+                @Override
+                public boolean onDoubleTap(MotionEvent e) {
+                    if (nMode == MEMOMODE.MODE_VIEW) {
+                        Toast.makeText(getApplicationContext(),
+                                R.string.memo_change_mode, Toast.LENGTH_SHORT).show();
+                        mTitleText.setFocusable(true);
+                        mBodyText.setFocusableInTouchMode(true);    //터치 가능하게 하는 모드
+                        mTitleText.setFocusableInTouchMode(true);
+                        mBodyText.setFocusable(true);
+                        mBodyText.requestFocus();   //포커스가 몸체 메모로 잡힌다.
+                    }
+                    nMode = MEMOMODE.MODE_EDIT;
+                    return super.onDoubleTap(e);
+                }
+            });
 
     /*********************************************
      * 에디트 박스
@@ -109,7 +147,7 @@ public class MemoAddActivity extends Activity {
      ********************************************** */
     private void populateFields() {
         if (mRowId != null) {
-            note = mDbHelper.fetchNote(mRowId);
+            note = mDbHelper.fetchMemo(mRowId);
             startManagingCursor(note);
             mTitleText.setText(note.getString(
                     note.getColumnIndexOrThrow(DBAdapter.TITLE)));
@@ -119,14 +157,14 @@ public class MemoAddActivity extends Activity {
                     note.getColumnIndexOrThrow(DBAdapter.CREATE_DATE)));
 
 
-//            //만약 안에 내용이 있으면 비활성화
-//            if( mBodyText.getText().toString() != "" || mTitleText.getText().toString() != "") {
-//                mTitleText.setFocusable(false);
-//                mBodyText.setFocusable(false);
-//            }
+            //만약 안에 내용이 있으면 비활성화
+            if( mBodyText.getText().toString() != "" || mTitleText.getText().toString() != "") {
+                mTitleText.setFocusable(false);
+                mBodyText.setFocusable(false);
+            }
 
-//            mBeforeSaveBodyText = mBodyText.getText().toString();
-//            mBeforeSaveTitleText = mTitleText.getText().toString();
+            mBeforeSaveBodyText = mBodyText.getText().toString();
+            mBeforeSaveTitleText = mTitleText.getText().toString();
         }
     }
 
@@ -169,11 +207,11 @@ public class MemoAddActivity extends Activity {
         if( title.equals("") && body.equals(""))
             return;
 
-//        //수정된게 없으면 X
-//        if( mBeforeSaveBodyText.equals(mBodyText.getText().toString()) &&
-//                mBeforeSaveTitleText.equals(mTitleText.getText().toString())) {
-//            return;
-//        }
+        //수정된게 없으면 X
+        if( mBeforeSaveBodyText.equals(mBodyText.getText().toString()) &&
+                mBeforeSaveTitleText.equals(mTitleText.getText().toString())) {
+            return;
+        }
 
         //수정된게 있으니까
         //날짜를 세팅 다시해줌
@@ -187,27 +225,25 @@ public class MemoAddActivity extends Activity {
 
         //노트 생성
         if(mRowId == null) {
-            long id = mDbHelper.createNote(title, body, strDateChangeValueView, longDateChangeValueView,
+            long id = mDbHelper.createMemo(title, body, strDateChangeValueView, longDateChangeValueView,
                     strDateCreateValueView);
             if (id > 0) {
                 mRowId = id;
             } else {
                 Log.e("saveState", "노트 생성실패");
             }
+        } else{
+            if(!mDbHelper.updateMemo(mRowId, title, body, strDateChangeValueView, longDateChangeValueView,
+                    strDateCreateValueView)){
+                Log.e("saveState","노트 수정실패");
+            }
         }
 
-//        }else{
-//            if(!mDbHelper.updateNote(mRowId, title, body, strDateChangeValueView, longDateChangeValueView,
-//                    strDateCreateValueView)){
-//                Log.e("saveState","노트 생성실패");
-//            }
-//        }
-
-//        if( nMode == MODE_EDIT) {
-//            //메모 저장 토스트
-//            Toast.makeText(getApplicationContext(),
-//                    R.string.memo_save, Toast.LENGTH_SHORT).show();
-//        }
+        if( nMode == MEMOMODE.MODE_EDIT) {
+            //메모 저장 토스트
+            Toast.makeText(getApplicationContext(),
+                    R.string.memo_save, Toast.LENGTH_SHORT).show();
+        }
     }
 
     /*********************************************
@@ -215,7 +251,7 @@ public class MemoAddActivity extends Activity {
      ********************************************** */
     private void loadSavedDate() {
         if (mRowId != null) {
-            note = mDbHelper.fetchNote(mRowId);
+            note = mDbHelper.fetchMemo(mRowId);
 
             strDateChangeValueView = note.getString(
                     note.getColumnIndexOrThrow(DBAdapter.CHANGED_DATE));
