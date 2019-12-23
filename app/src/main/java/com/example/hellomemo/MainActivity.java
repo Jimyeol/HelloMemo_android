@@ -24,6 +24,9 @@ public class MainActivity extends AppCompatActivity {
     //퍼미션 코드
     public static int OVERLAY_PERMISSION_REQ_CODE = 1234;
 
+    //옵션 코드
+    private static final int ACTIVITY_CREATE=0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,15 +36,14 @@ public class MainActivity extends AppCompatActivity {
         if( Build.VERSION.SDK_INT>=23) someMethod();
 
 
+        /* 메모 추가 */
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                createMemo();
             }
         });
     }
@@ -83,5 +85,11 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         else {}
+    }
+
+    private void createMemo() {
+        //노트 생성 인텐트
+        Intent i = new Intent(this, MemoAddActivity.class);
+        startActivityForResult(i, ACTIVITY_CREATE);
     }
 }
