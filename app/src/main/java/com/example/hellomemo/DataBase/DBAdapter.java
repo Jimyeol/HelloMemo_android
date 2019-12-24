@@ -160,4 +160,20 @@ public class DBAdapter {
         return mDb.delete(DATABASE_TABLE, KEY_ROWID, null) > 0;
     }
 
+
+    /*********************************************
+     * 메모 검색
+     ********************************************** */
+    public Cursor searchMemo (String strKeyTitle) {
+        //메모 내용까지 검색합니다.
+        Cursor mCursor = mDb.query(DATABASE_TABLE,
+                new String[] {KEY_ROWID,
+                        TITLE, BODY, CHANGED_DATE, CREATE_DATE},
+                TITLE  + " like ? " + " or " + BODY + " like? ",
+                new String[]{"%" + strKeyTitle + "%", "%" + strKeyTitle + "%"}, null, null, null, null);
+        if (mCursor != null) {
+            mCursor.moveToFirst();
+        }
+        return mCursor;
+    }
 }

@@ -14,12 +14,15 @@ import android.os.Bundle;
 import com.example.hellomemo.DataBase.DBAdapter;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 
 import android.provider.Settings;
+import android.speech.RecognizerIntent;
+import android.text.TextUtils;
 import android.view.ContextMenu;
 import android.view.View;
 import android.view.Menu;
@@ -28,6 +31,8 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -56,6 +61,10 @@ public class MainActivity extends AppCompatActivity {
     private static final int SELECT_ID = 2;
     private static final int SHARE_ID = 3;
     private static final int INFOR_ID = 4;
+
+    //타이틀바 서치뷰
+    private MaterialSearchView searchView;
+    public static boolean bSearchMode = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +109,41 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(i, MEMOMODE.ACTIVITY_EDIT);
             }
         }) ;
+
+        /**** 타이틀바 검색 ****/
+        searchView = (MaterialSearchView) findViewById(R.id.search_view);
+        searchView.setVoiceSearch(true);
+        searchView.setCursorDrawable(R.drawable.color_cursor_white);
+        //searchView.setSuggestions(getResources().getStringArray(R.array.query_suggestions));
+        searchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if( newText.equals(""))
+                    showAllMemos();
+
+                CharSequence charQuery = newText;
+                if (charQuery != null && TextUtils.getTrimmedLength(charQuery) > 0) {
+                    doSearch(newText);
+                    MainActivity.bSearchMode = true;
+                }
+                return false;
+            }
+        });
+        searchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
+            @Override
+            public void onSearchViewShown() {
+                showAllMemos();
+            }
+
+            @Override
+            public void onSearchViewClosed() {
+            }
+        });
     }
 
 
@@ -109,16 +153,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        MenuItem item = menu.findItem(R.id.action_search);
+        searchView.setMenuItem(item);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_sort:
+            case R.id.menu_sort:
                 sortDialog();
                 break;
-            case R.id.action_settings:
+            case R.id.menu_option:
                 break;
             default:
                return super.onOptionsItemSelected(item);
@@ -348,5 +394,63 @@ public class MainActivity extends AppCompatActivity {
                 valueOf(strBody.length()).toString() +
                 "\n생성된 날짜 : " + strDate);
         dialog.show();
+    }
+
+
+    /*********************************************
+     * 메모 정보 다이얼로그 (컨텍스트 메뉴)
+     ********************************************** */
+    private void doSearch(String search) {
+        Cursor notesCursor = mDbHelper.searchMemo(search);
+
+        startManagingCursor(notesCursor);
+
+        String[] from = new String[] { DBAdapter.TITLE , DBAdapter.BODY, DBAdapter.CHANGED_DATE};
+        int[] to = new int[] { R.id.textView1,R.id.textbody,R.id.date_row};
+
+        SimpleCursorAdapter notes =
+                new SimpleCursorAdapter(this, R.layout.note_row, notesCursor, from, to);
+        listview.setAdapter(notes);
+    }
+
+
+    /*********************************************
+     * 검색 결과
+     ********************************************** */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        showAllMemos();
+        if (requestCode == MaterialSearchView.REQUEST_VOICE && resultCode == RESULT_OK) {
+            ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            if (matches != null && matches.size() > 0) {
+                String searchWrd = matches.get(0);
+                if (!TextUtils.isEmpty(searchWrd)) {
+                    searchView.setQuery(searchWrd, false);
+                }
+            }
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+
+    /*********************************************
+     * 검색 상황 뒤로가기
+     ********************************************** */
+    @Override
+    public void onBackPressed() {
+        //검색된 상황에서 뒤로가기 누르면
+        //앱이 꺼지는게 아니라 데이터 보여주기
+        if (searchView.isSearchOpen()) {
+            searchView.closeSearch();
+            showAllMemos();
+        } else {
+            if( MainActivity.bSearchMode) {
+                MainActivity.bSearchMode = false;
+                showAllMemos();
+            } else {
+                super.onBackPressed();
+            }
+        }
     }
 }
