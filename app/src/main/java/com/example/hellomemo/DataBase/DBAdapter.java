@@ -143,4 +143,21 @@ public class DBAdapter {
         return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
     }
 
+
+    /*********************************************
+     * 메모 삭제
+     ********************************************** */
+    public boolean deleteMemo(long rowId) {
+        return mDb.delete(DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
+    }
+
+
+    /*********************************************
+     * 모든 메모 삭제
+     ********************************************** */
+    public boolean deleteAllNote() {
+        /** 모든 메모 삭제시 유의 **/
+        return mDb.delete(DATABASE_TABLE, KEY_ROWID, null) > 0;
+    }
+
 }

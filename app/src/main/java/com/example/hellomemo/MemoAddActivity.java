@@ -172,7 +172,7 @@ public class MemoAddActivity extends Activity {
      * 현재 시간, 날짜 불러오기
      ********************************************** */
     private void setNewDate() {
-        strDateChangeValue = getDateFormat("yyMMddHHmm");    //Long을 저장하기 위해 불러오기
+        strDateChangeValue = getDateFormat("yyMMddHHmmss");    //Long을 저장용 데이터
         strDateChangeValueView = getDateFormat("y'.'M'.'d a h':'m");    //뷰에 보여주기 위한
 
         //정렬을 위한 날짜를 int로 변형합니다. (스트링은 정렬이어려우니까)
