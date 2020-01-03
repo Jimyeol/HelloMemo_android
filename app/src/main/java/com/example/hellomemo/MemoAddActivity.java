@@ -1,7 +1,9 @@
 package com.example.hellomemo;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -39,9 +41,9 @@ public class MemoAddActivity extends Activity {
     private Cursor note;
 
     private EditText mTitleText;
-    private String mBeforeSaveTitleText = ""; //수정된거 확인 여부 String
+    private String mBeforeSaveTitleText = ""; //수정되기 전의 Title String
     private EditText mBodyText;
-    private String mBeforeSaveBodyText = ""; //수정된거 확인 여부 String
+    private String mBeforeSaveBodyText = ""; //수정되기 전의 Body String
     private TextView mDateText;
 
     private ImageButton btnSave;
@@ -232,7 +234,7 @@ public class MemoAddActivity extends Activity {
             } else {
                 Log.e("saveState", "노트 생성실패");
             }
-        } else{
+        } else {
             if(!mDbHelper.updateMemo(mRowId, title, body, strDateChangeValueView, longDateChangeValueView,
                     strDateCreateValueView)){
                 Log.e("saveState","노트 수정실패");

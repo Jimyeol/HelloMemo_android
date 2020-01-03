@@ -66,13 +66,18 @@ public class MainActivity extends AppCompatActivity {
     private MaterialSearchView searchView;
     public static boolean bSearchMode = false;
 
+    //권한쪽
+    private static final int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 1;
+    private Intent intent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         /**** 안드로이드 권한 ****/
-        if( Build.VERSION.SDK_INT>=23) someMethod();
+        intent = new Intent(getApplicationContext(),onTopService.class);
+        if( Build.VERSION.SDK_INT>=23) permissionCheck();
 
         /**** DB 오픈 ****/
         mDbHelper = new DBAdapter (this);
@@ -255,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
      * 안드로이드 6.0 이후 퍼미션
      ********************************************** */
     @SuppressLint("NewApi")
-    public void someMethod() {
+    public void permissionCheck() {
         int permissionCheck = ContextCompat.checkSelfPermission(this, Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
 
         if(permissionCheck== PackageManager.PERMISSION_DENIED){
@@ -357,6 +362,7 @@ public class MainActivity extends AppCompatActivity {
                 showAllMemos();
                 return true;
             case SELECT_ID:
+                startService(intent);
                 //팝업 부분
                 break;
             case SHARE_ID:

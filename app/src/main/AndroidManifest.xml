@@ -2,10 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.hellomemo">
 
-    <uses-permission
-        android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-    <uses-permission
-        android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_SERVICE" />
 
@@ -27,9 +25,14 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.example.hellomemo.MemoAddActivity"
+            android:name=".MemoAddActivity"
             android:label="@string/app_name"
-            android:windowSoftInputMode="adjustUnspecified"/>
+            android:windowSoftInputMode="adjustUnspecified" />
+
+        <service
+            android:name=".onTopService"
+            android:enabled="true"
+            android:exported="false">></service>
     </application>
 
 </manifest>
