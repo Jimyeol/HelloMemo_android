@@ -7,7 +7,9 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -71,6 +73,7 @@ public class onTopService extends Service {
                     int y = (int) (event.getRawY() - START_Y);
                     params.x = PREV_X + x;
                     params.y = PREV_Y + y;
+
                     wm.updateViewLayout(vPop, params);
                     break;
             }
@@ -88,6 +91,11 @@ public class onTopService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+//        DisplayMetrics out = new DisplayMetrics();
+//        WindowManager window = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+//        window.getDefaultDisplay().getMetrics( out );
+//        int dp= out.densityDpi;
 
         vPop = View.inflate(getApplicationContext(), R.layout.service_ontop, null);
         tvText = (TextView) vPop.findViewById(R.id.poptext);

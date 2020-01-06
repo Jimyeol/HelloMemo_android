@@ -23,6 +23,7 @@ import androidx.core.content.ContextCompat;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.view.ContextMenu;
 import android.view.View;
 import android.view.Menu;
